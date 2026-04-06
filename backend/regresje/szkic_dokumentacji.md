@@ -1,0 +1,1 @@
+ automatyczne wytrenowanie modelu regresji liniowej - można wybrać jaką metodę stosujemy (klasyczną/ridge/lasso/PCR), można wybrać jakie przekształcenia dla zmiennych ilościowych próbujemy (np.n^2, logx, 1/x) itd.
