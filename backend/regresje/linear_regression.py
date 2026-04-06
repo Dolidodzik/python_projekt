@@ -3,6 +3,9 @@ import pandas as pd
 from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
 from typing import Optional, List
+from sklearn.metrics import mean_squared_error, r2_score
+import json
+import numpy as np
 
 
 def format_float_to_string(value):
@@ -13,13 +16,16 @@ def format_float_to_string(value):
 
 
 def train_linear_regression(
-    df: pd.DataFrame,
+    train_df: pd.DataFrame,
+    test_df: Optional[pd.DataFrame],
     mode: str,
     columns: Optional[str],
     target_column: str,
+    transformations: Optional[str],
+    method: str = "ols",
 ):
     # żeby trenować musimy miec przynajmniej 1 predyktor i 1 target
-    if df.empty or len(df.columns) < 2:
+    if train_df.empty or len(train_df.columns) < 2:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="INVALID_DATASET",
@@ -34,14 +40,22 @@ def train_linear_regression(
         )
 
     # wybrana kolumna musi byc w dfie
-    if target_column not in df.columns:
+    if target_column not in train_df.columns:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="TARGET_COLUMN_NOT_FOUND",
         )
 
+    # jezeli test_df podany to musi miec identyczne kolumny jak train_df
+    if test_df is not None:
+        if list(test_df.columns) != list(train_df.columns):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="TEST_DATASET_SCHEMA_MISMATCH",
+            )
+
     # domyślnie wybieramy sobie wszystkie kolumny oprócz targeta jako predyktory
-    all_feature_cols: List[str] = [c for c in df.columns if c != target_column]
+    all_feature_cols: List[str] = [c for c in train_df.columns if c != target_column]
 
     if mode == "all_parameters":
         feature_cols = all_feature_cols
@@ -57,7 +71,7 @@ def train_linear_regression(
         requested = [c.strip() for c in columns.split(",") if c.strip()]
 
         # sprawdzamy czy wszystkie napewno sa w dfie
-        unknown = [c for c in requested if c not in df.columns]
+        unknown = [c for c in requested if c not in train_df.columns]
         if unknown:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -80,7 +94,9 @@ def train_linear_regression(
 
     # upewniamy sie ze wszystkie kolumny sa numeryczne (cechy jakościowe powinny wcześniej zostać z-onehot-encodowane)
     numeric_cols = feature_cols + [target_column]
-    non_numeric = [c for c in numeric_cols if not pd.api.types.is_numeric_dtype(df[c])]
+    non_numeric = [
+        c for c in numeric_cols if not pd.api.types.is_numeric_dtype(train_df[c])
+    ]
     if non_numeric:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -88,15 +104,81 @@ def train_linear_regression(
         )
 
     # upewniamy sie ze wszystkie kolumny sa bez nanow (wtedy trenowanie sie wywala)
-    if df[numeric_cols].isna().any().any():
+    if train_df[numeric_cols].isna().any().any():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="NANS_NOT_ALLOWED",
         )
 
+    # probojemy zrobic transofmracje
+    new_feature_cols = []
+    if transformations:
+        try:
+            transformations = json.loads(transformations)
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="INVALID_TRANSFORMATIONS",
+            )
+
+        for transformation in transformations:
+            col = transformation.get("column")
+            if (
+                col not in feature_cols
+            ):  # kazda transofrmacja musi miec kolumna dostepna w feature_cols
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="UNKNOWN_TRANSFORMATION_COLUMN",
+                )
+            transformation_type = transformation.get("type")
+            new_col_name = "TRANSFORMATION_" + col + "_" + transformation_type
+            if transformation_type == "log":
+                if train_df[col].min() <= 0:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="LOG_TRANSFORMATION_NOT_ALLOWED_FOR_NON_POSITIVE_VALUES",
+                    )
+                train_df[new_col_name] = np.log(train_df[col])
+
+                if test_df is not None and test_df[col].min() <= 0:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="LOG_TRANSFORMATION_NOT_ALLOWED_FOR_NON_POSITIVE_VALUES",
+                    )
+                if test_df is not None:
+                    test_df[new_col_name] = np.log(test_df[col])
+
+            elif transformation_type == "1/x":
+                if (train_df[col] == 0).any():
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="1/x_TRANSFORMATION_NOT_ALLOWED_FOR_NEGATIVE_VALUES",
+                    )
+                train_df[new_col_name] = 1 / train_df[col]
+
+                if test_df is not None and (test_df[col] == 0).any():
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="1/x_TRANSFORMATION_NOT_ALLOWED_FOR_NEGATIVE_VALUES",
+                    )
+                if test_df is not None:
+                    test_df[new_col_name] = 1 / test_df[col]
+
+            elif transformation_type == "square":
+                train_df[new_col_name] = np.square(train_df[col])
+                if test_df is not None:
+                    test_df[new_col_name] = np.square(test_df[col])
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="UNKNOWN_TRANSFORMATION_TYPE",
+                )
+            new_feature_cols.append(new_col_name)
+
+    feature_cols.extend(new_feature_cols)
     # trenowanie prostej regresji liniowej
-    X = df[feature_cols]
-    y = df[target_column]
+    X = train_df[feature_cols]
+    y = train_df[target_column]
     X_with_const = sm.add_constant(X)
     model = sm.OLS(y, X_with_const).fit()
 
@@ -136,5 +218,25 @@ def train_linear_regression(
         "r_squared": format_float_to_string(model.rsquared),
         "adj_r_squared": format_float_to_string(model.rsquared_adj),
         "f_p_value": format_float_to_string(model.f_pvalue),
+        "prediction_results": None,
     }
+
+    if test_df is not None:
+        try:
+            X_test = test_df[feature_cols]
+            y_test = test_df[target_column]
+
+            X_test_with_const = sm.add_constant(X_test, has_constant="add")
+            y_pred = model.predict(X_test_with_const)
+
+            response["prediction_results"] = {
+                "mse": format_float_to_string(mean_squared_error(y_test, y_pred)),
+                "r2": format_float_to_string(r2_score(y_test, y_pred)),
+            }
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="TEST_DATASET_BAD_STRUCTURE",
+            )
+
     return JSONResponse(status_code=200, content=response)
