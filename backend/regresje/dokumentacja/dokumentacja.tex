@@ -1,0 +1,179 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[polish]{babel}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!10},
+    language=bash,
+    commentstyle=\color{green!50!black},
+    keywordstyle=\color{blue},
+    stringstyle=\color{red},
+    showstringspaces=false,
+}
+
+\title{Dokumentacja endpointu regresji liniowej}
+\author{Dominik Lech}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Założenia projektu}
+Zadaniem mojej części projektu jest wystawić endpoint HTTP, który pozwoli na trenowanie modelu regresji liniowej na podstawie zadanych plików CSV na różne sposoby – np. z dopuszczeniem różnych automatycznych transformacji, regularyzacja L1 i L2, ze sprawdzeniem wytrenowanego modelu na zbiorze testowym i tak dalej. Mój moduł zapewnia osobie (np. analitykowi) korzystającej z programu opcję zobaczenia, które kolumny są dobrymi predyktorami dla wybranej kolumny, a które są mniej istotne, jak prosty model działa na zbiorze testowym i jaka część wariancji wyjaśnia (wartość \(R^2\)).
+
+Projekt zakłada, że dane w CSV są już odpowiednio przygotowane i oczyszczone – tutaj tylko trenuję regresję liniową dla wybranych kolumn z podanego pliku. Dlatego pliki CSV nie mogą mieć brakujących wartości ani zmiennych jakościowych – one powinny być wcześniej zmienione na ilościowe, np. poprzez kodowanie zero-jedynkowe (one-hot encoding).
+
+Dla \texttt{method="ols"}, zależnie od celu, zalecana jest standaryzacja danych przed podaniem ich do trenowania – tak żeby miało sens porównywanie wielkości współczynników przy predyktorach. Dla ridge i lasso standaryzacja jest \textbf{konieczna}, żeby algorytmy mogły zadziałać poprawnie.
+
+\section{Wykorzystane biblioteki}
+Wszystkie potrzebne biblioteki dodano do \texttt{requirements.txt}. Najważniejsze:
+
+\begin{itemize}
+    \item \texttt{pandas} – do załadowania CSV do Pythona i zarządzania danymi w postaci ramki danych,
+    \item \texttt{numpy} – do transformacji,
+    \item \texttt{statsmodels} – do trenowania OLS,
+    \item \texttt{scikit-learn} – do trenowania ridge i lasso.
+\end{itemize}
+
+\section{Struktura projektu}
+Wszystko znajduje się w katalogu \texttt{regresje}, który zawiera:
+\begin{itemize}
+    \item \texttt{linear\_regression.py} – funkcja wywołująca inne funkcje i zwracająca końcowy wynik,
+    \item \texttt{validations.py} – odpowiada za walidację danych,
+    \item \texttt{apply\_transformations.py} – aplikuje transformacje (dodaje nowe kolumny na podstawie istniejących),
+    \item \texttt{ols.py} – trenuje model standardowej regresji liniowej,
+    \item \texttt{lasso.py} – trenuje model z regularyzacją L1,
+    \item \texttt{ridge.py} – trenuje model z regularyzacją L2,
+    \item \texttt{utils.py} – małe pomocnicze funkcje,
+    \item \texttt{dokumentacja/} – katalog zawierający dokumentację.
+\end{itemize}
+
+\section{Dane wejściowe}
+\subsection{Wymagane pola}
+\begin{itemize}
+    \item \texttt{train\_file} – plik, na którym będziemy trenować model.
+    \item \texttt{target\_column} (string) – nazwa kolumny, którą model będzie przewidywać.
+    \item \texttt{mode} (string) – tryb wyboru predyktorów:
+        \begin{itemize}
+            \item \texttt{"all\_parameters"} – wszystkie kolumny oprócz \texttt{target\_column} są predyktorami,
+            \item \texttt{"include\_parameters"} – tylko kolumny podane w \texttt{columns} są predyktorami,
+            \item \texttt{"exclude\_parameters"} – wszystkie kolumny oprócz \texttt{target\_column} i podanych w \texttt{columns} są predyktorami.
+        \end{itemize}
+\end{itemize}
+
+\subsection{Pola opcjonalne}
+\begin{itemize}
+    \item \texttt{columns} (string) – lista nazw kolumn oddzielona przecinkami (używana dla \texttt{include\_parameters} lub \texttt{exclude\_parameters}).
+    \item \texttt{transformations} (string) – lista transformacji w formacie JSON:
+        \begin{verbatim}
+[{"column": "NAZWA_KOLUMNY", "type": "1/x"},
+ {"column": "NAZWA_KOLUMNY", "type": "square"}]
+        \end{verbatim}
+        Dostępne typy: \texttt{"1/x"}, \texttt{"square"}, \texttt{"log"}.
+    \item \texttt{test\_file} – opcjonalny plik testowy (musi mieć identyczne kolumny i typy jak \texttt{train\_file}). Jeśli podany, po trenowaniu model jest testowany na nowych danych.
+    \item \texttt{method} (string) – metoda trenowania:
+        \begin{itemize}
+            \item \texttt{"ols"} – zwykła regresja liniowa,
+            \item \texttt{"lasso"} – regresja z regularyzacją L1 (współczynniki mogą spaść do zera),
+            \item \texttt{"ridge"} – regresja z regularyzacją L2 (współczynniki nie zerują się).
+        \end{itemize}
+    \item \texttt{alpha} (float) – dodatni parametr regularyzacji, wymagany dla \texttt{lasso} i \texttt{ridge}. Im bliższy zeru, tym regularyzacja mniejsza; \texttt{alpha=0} jest blokowane – wtedy należy użyć \texttt{method="ols"}.
+\end{itemize}
+
+\section{Dane wyjściowe}
+Przykładowa odpowiedź JSON:
+\begin{verbatim}
+{
+    "parameters": [
+        {
+            "name": "intercept",
+            "coefficient": "0.373785",
+            "p_value": "0.000000",
+            "standard_error": "0.019497",
+            "conf_int_lower": "0.335488",
+            "conf_int_upper": "0.412083"
+        },
+        ...
+    ],
+    "r_squared": "0.419415",
+    "adj_r_squared": "0.409010",
+    "f_p_value": "0.000000",
+    "prediction_results": {
+        "mse": "0.162862",
+        "r2": "0.339213"
+    }
+}
+\end{verbatim}
+
+Opisy pól:
+\begin{itemize}
+    \item \texttt{parameters} – lista estymowanych współczynników.
+        \begin{itemize}
+            \item \texttt{name} – nazwa parametru (lub \texttt{intercept} dla wyrazu wolnego).
+            \item \texttt{coefficient} – wartość współczynnika.
+            \item \texttt{p\_value} – poziom istotności (poniżej 0,05 oznacza statystycznie istotny predyktor). Dla ridge/lasso – \texttt{null}.
+            \item \texttt{standard\_error} – błąd standardowy estymatora. Dla ridge/lasso – \texttt{null}.
+            \item \texttt{conf\_int\_lower} / \texttt{conf\_int\_upper} – dolna i górna granica 95\% przedziału ufności. Dla ridge/lasso – \texttt{null}.
+        \end{itemize}
+    \item \texttt{r\_squared} – \(R^2\) na zbiorze treningowym (część wariancji wyjaśnionej przez model).
+    \item \texttt{adj\_r\_squared} – skorygowany \(R^2\) (kara za liczbę predyktorów).
+    \item \texttt{f\_p\_value} – p-wartość testu F dla całego modelu. Dla ridge/lasso – \texttt{null}.
+    \item \texttt{prediction\_results} (obiekt, dostępny tylko jeśli podano \texttt{test\_file}):
+        \begin{itemize}
+            \item \texttt{mse} – średniokwadratowy błąd predykcji na zbiorze testowym.
+            \item \texttt{r2} – \(R^2\) na zbiorze testowym. Jeśli jest zauważalnie mniejsze niż \(R^2\) treningowe, sugeruje to overfitting.
+        \end{itemize}
+\end{itemize}
+
+Dla metod \texttt{lasso} lub \texttt{ridge} część pól (p\_value, standard\_error, conf\_int, f\_p\_value) będzie miała wartość \texttt{null} – jest to oczekiwane.
+
+\section{Kody błędów (status 400 Bad Request)}
+\begin{itemize}
+    \item \texttt{INVALID\_DATASET} – \texttt{train\_df} jest pusty lub ma mniej niż 2 kolumny.
+    \item \texttt{INVALID\_MODE} – podano nieobsługiwany tryb \texttt{mode}.
+    \item \texttt{TARGET\_COLUMN\_NOT\_FOUND} – brak kolumny \texttt{target\_column} w pliku treningowym.
+    \item \texttt{TEST\_DATASET\_BAD\_STRUCTURE} – \texttt{test\_file} ma inne kolumny lub typy niż \texttt{train\_file}.
+    \item \texttt{COLUMNS\_REQUIRED} – dla trybu \texttt{include\_parameters} lub \texttt{exclude\_parameters} brakuje parametru \texttt{columns}.
+    \item \texttt{UNKNOWN\_COLUMNS} – w \texttt{columns} podano nazwy kolumn nieistniejące w \texttt{train\_file}.
+    \item \texttt{NO\_FEATURE\_COLUMNS\_SELECTED} – po przetworzeniu nie wybrano żadnej kolumny predyktorów.
+    \item \texttt{NON\_NUMERIC\_COLUMNS\_NOT\_ALLOWED} – wykryto kolumnę nienumeryczną.
+    \item \texttt{NANS\_NOT\_ALLOWED} – wykryto brakujące wartości (NaN).
+    \item \texttt{INVALID\_TRANSFORMATIONS} – niepoprawna struktura JSON dla transformacji.
+    \item \texttt{UNKNOWN\_TRANSFORMATION\_COLUMN} – transformacja dotyczy kolumny nieistniejącej w \texttt{train\_file}.
+    \item \texttt{LOG\_TRANSFORMATION\_NOT\_ALLOWED\_FOR\_NON\_POSITIVE\_VALUES} – logarytm z wartości niedodatnich.
+    \item \texttt{1/x\_TRANSFORMATION\_NOT\_ALLOWED\_FOR\_NEGATIVE\_VALUES} – dzielenie przez zero lub ujemne (wymagane dodatnie).
+    \item \texttt{UNKNOWN\_TRANSFORMATION\_TYPE} – nieznany typ transformacji.
+    \item \texttt{POSITIVE\_ALPHA\_REQUIRED} – \texttt{alpha} nie jest liczbą dodatnią.
+    \item \texttt{UNKNOWN\_METHOD} – podano nieobsługiwaną metodę.
+    \item \texttt{COULD\_NOT\_READ\_CSV} – nie udało się wczytać \texttt{train\_file}.
+    \item \texttt{COULD\_NOT\_READ\_TEST\_CSV} – nie udało się wczytać \texttt{test\_file}.
+\end{itemize}
+
+\section{Przykładowe wywołanie curl}
+\begin{lstlisting}
+curl --location 'http://127.0.0.1:8000/regressions/linear' \
+--form 'mode="all_parameters"' \
+--form 'columns="Fare,SibSp,Parch"' \
+--form 'target_column="Survived"' \
+--form 'train_file=@"/sciezka/train.csv"' \
+--form 'test_file=@"/sciezka/test.csv"' \
+--form 'transformations="[{\"column\": \"Age\", \"type\": \"1/x\"}, {\"column\": \"Age\", \"type\": \"square\"}]"' \
+--form 'method="ridge"' \
+--form 'alpha="0.01"'
+\end{lstlisting}
+
+\section{Podsumowanie}
+Podsumowując, udało mi się utworzyć użyteczne narzędzie pozwalające na wygodne sprawdzanie rezultatów trenowania różnych modeli regresji liniowych w różnych scenariuszach na własnych danych, bez konieczności pisania własnego kodu. Mój moduł będzie wymagał interfejsu graficznego, który będzie łatwy do zaimplementowania dzięki odpowiedniemu opisaniu danych wejściowych, wyjściowych oraz kodów błędów.
+
+\end{document}
