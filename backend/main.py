@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import Response
+from fastapi.responses import JSONResponse
 from fastapi import HTTPException
 
 import pandas as pd
@@ -13,6 +14,11 @@ from cleaning_and_preprocessing.encode import encode_data
 from cleaning_and_preprocessing.drop import drop_column_data
 from cleaning_and_preprocessing.fillna import fillna_constant_data
 from cleaning_and_preprocessing.outliers import remove_outliers_data
+
+from statistic_tests.categorical_dependency import categorical_dependency
+from statistic_tests.correlation import correlation
+from statistic_tests.t_test import t_test
+from statistic_tests.anova import anova
 
 app = FastAPI()
 
@@ -118,6 +124,68 @@ async def remove_outliers(
     df = remove_outliers_data(df, method, cols, threshold)
     output = df.to_csv(index=False)
     return Response(content=output, media_type="text/csv")
+
+@app.post("/statistic-tests/categorical_dependency")
+async def categorical_dependency_endpoint(
+    file: UploadFile = File(...),
+    col1: str = Form(...),
+    col2: str = Form(...)
+):
+    contents = await file.read()
+    df = read_dataframe(contents)
+
+    try:
+        result = categorical_dependency(df, col1, col2)
+        return JSONResponse(content=result)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/statistic-tests/correlation")
+async def correlation_endpoint(
+    file: UploadFile = File(...),
+    method: str = Form(...),
+    columns: str = Form(None)
+):
+    contents = await file.read()
+    df = read_dataframe(contents)
+
+    try:
+        cols = parse_columns(columns, df)
+        result_df = correlation(df, method, cols)
+        output = result_df.to_csv(index=False)
+        return Response(content=output, media_type="text/csv")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/statistic-tests/t_test")
+async def t_test_endpoint(
+    file: UploadFile = File(...),
+    group_col: str = Form(...),
+    value_col: str = Form(...)
+):
+    contents = await file.read()
+    df = read_dataframe(contents)
+
+    try:
+        result = t_test(df, group_col, value_col)
+        return JSONResponse(content=result)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/statistic-tests/anova")
+async def anova_endpoint(
+    file: UploadFile = File(...),
+    group_col: str = Form(...),
+    value_col: str = Form(...)
+):
+    contents = await file.read()
+    df = read_dataframe(contents)
+
+    try:
+        result = anova(df, group_col, value_col)
+        return JSONResponse(content=result)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/test/csv")
 async def test_csv(
