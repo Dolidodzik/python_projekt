@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026/Arch Linux) (preloaded format=pdflatex 2026.4.7)  7 APR 2026 20:21
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026/Arch Linux) (preloaded format=pdflatex 2026.4.7)  7 APR 2026 20:26
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -349,7 +349,10 @@ File: lstlang1.sty 2025/11/14 1.11b listings language file
 File: l3backend-pdftex.def 2025-10-09 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count320
 )
-No file dokumentacja.aux.
+(./dokumentacja.aux
+Package babel Info: 'polish' activates 'polish' shorthands.
+(babel)             Reported on input line 8.
+)
 \openout1 = `dokumentacja.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 28.
@@ -370,8 +373,7 @@ LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 28.
 LaTeX Font Info:    ... okay on input line 28.
 LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 28.
 LaTeX Font Info:    ... okay on input line 28.
-Package babel Info: 'polish' activates 'polish' shorthands.
-(babel)             Reported on input line 28.
+
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
 *geometry* verbose mode - [ preamble ] result:
@@ -422,6 +424,7 @@ Package babel Info: 'polish' activates 'polish' shorthands.
 \everyMPtoPDFconversion=\toks28
 )
 Package hyperref Info: Link coloring OFF on input line 28.
+ (./dokumentacja.out) (./dokumentacja.out)
 \@outlinefile=\write3
 \openout3 = `dokumentacja.out'.
 
@@ -452,21 +455,14 @@ m/n/12 .
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
-
-
-Package rerunfilecheck Warning: File `dokumentacja.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `dokumentacja.out':
-(rerunfilecheck)             Before: <no file>
-(rerunfilecheck)             After:  F778EBECEF02AC5572EEF205BDC0F710;1479.
+Package rerunfilecheck Info: File `dokumentacja.out' has not changed.
+(rerunfilecheck)             Checksum: F778EBECEF02AC5572EEF205BDC0F710;1479.
  ) 
 Here is how much of TeX's memory you used:
- 12815 strings out of 467525
- 192013 string characters out of 5425862
+ 12834 strings out of 467525
+ 192295 string characters out of 5425862
  911114 words of memory out of 5000000
- 41585 multiletter control sequences out of 15000+600000
+ 41598 multiletter control sequences out of 15000+600000
  638859 words of font info for 67 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  75i,6n,79p,673b,1237s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -481,10 +477,10 @@ ik/.texlive/texmf-var/fonts/pk/ljfour/jknappen/ec/ecrm1440.600pk> </home/lesnik
 /.texlive/texmf-var/fonts/pk/ljfour/jknappen/ec/ecrm2074.600pk></usr/share/texm
 f-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb></usr/share/texmf-dist/fonts/t
 ype1/public/amsfonts/cm/cmr8.pfb>
-Output written on dokumentacja.pdf (4 pages, 118106 bytes).
+Output written on dokumentacja.pdf (4 pages, 118891 bytes).
 PDF statistics:
- 391 PDF objects out of 1000 (max. 8388607)
- 85 compressed objects within 1 object stream
+ 423 PDF objects out of 1000 (max. 8388607)
+ 116 compressed objects within 2 object streams
  25 named destinations out of 1000 (max. 500000)
- 1 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 81 words of extra memory for PDF output out of 10000 (max. 10000000)
 
