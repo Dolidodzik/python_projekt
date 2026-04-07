@@ -17,6 +17,8 @@ async def run_linear_regression(
     columns: Optional[str] = Form(None),
     transformations: Optional[str] = Form(None),
     target_column: str = Form(...),
+    method: str = Form("ols"),
+    alpha: Optional[float] = Form(None),
 ):
     contents = await train_file.read()
     try:
@@ -45,4 +47,6 @@ async def run_linear_regression(
         columns=columns,
         target_column=target_column,
         transformations=transformations,
+        method=method,
+        alpha=alpha,
     )
