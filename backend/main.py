@@ -1,10 +1,12 @@
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import Response
+from exploration.routes import router as exploration_router
 import pandas as pd
 import io
 
 app = FastAPI()
 
+app.include_router(exploration_router, prefix="/exploration", tags=["Exploration"])
 
 @app.post("/test/csv")
 async def impute(
