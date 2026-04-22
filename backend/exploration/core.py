@@ -105,11 +105,10 @@ def perform_pca(
     pca = PCA(n_components=n_components)
     pca.fit(data_scaled)
 
-    # Wyjaśniona wariancja
     explained_variance_ratio = pca.explained_variance_ratio_.tolist()
     cumulative_variance = np.cumsum(explained_variance_ratio).tolist()
 
-    # Ładunki czynnikowe (loadings) dla pierwszych kilku komponentów 5
+    # Ładunki czynnikowe dla pierwszych 5 komponentów 
     loadings = {}
     for i in range(min(n_components, 5)):
         component_name = f"PC{i+1}"
