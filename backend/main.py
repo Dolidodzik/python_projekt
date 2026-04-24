@@ -19,6 +19,9 @@ from statistic_tests.categorical_dependency import categorical_dependency
 from statistic_tests.correlation import correlation
 from statistic_tests.t_test import t_test
 from statistic_tests.anova import anova
+from statistic_tests.normality import normality_test
+from statistic_tests.mann_whitney import mann_whitney_test
+from statistic_tests.covariance import covariance
 
 app = FastAPI()
 
@@ -184,6 +187,51 @@ async def anova_endpoint(
     try:
         result = anova(df, group_col, value_col)
         return JSONResponse(content=result)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/statistic-tests/normality")
+async def normality_endpoint(
+    file: UploadFile = File(...),
+    column: str = Form(...)
+):
+    contents = await file.read()
+    df = read_dataframe(contents)
+
+    try:
+        result = normality_test(df, column)
+        return JSONResponse(content=result)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/statistic-tests/mann_whitney")
+async def mann_whitney_endpoint(
+    file: UploadFile = File(...),
+    group_col: str = Form(...),
+    value_col: str = Form(...)
+):
+    contents = await file.read()
+    df = read_dataframe(contents)
+
+    try:
+        result = mann_whitney_test(df, group_col, value_col)
+        return JSONResponse(content=result)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/statistic-tests/covariance")
+async def covariance_endpoint(
+    file: UploadFile = File(...),
+    columns: str = Form(...)
+):
+    contents = await file.read()
+    df = read_dataframe(contents)
+
+    try:
+        cols = parse_columns(columns, df)
+        result_df = covariance(df, cols)
+        output = result_df.to_csv(index=False)
+        return Response(content=output, media_type="text/csv")
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
