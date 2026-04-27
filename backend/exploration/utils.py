@@ -3,9 +3,8 @@ import io
 from fastapi import HTTPException, UploadFile, status
 from typing import List, Optional
 
+# odczyt pliku CSV
 def read_csv_safe(file: UploadFile) -> pd.DataFrame:
-    
-    #odczyt pliku CSV
     
     try:
         contents = file.file.read()
@@ -24,31 +23,31 @@ def read_csv_safe(file: UploadFile) -> pd.DataFrame:
     finally:
         file.file.close()
 
+#Zwraca listę kolumn numerycznych w DataFrame
 def get_numeric_columns(df: pd.DataFrame) -> List[str]:
-    
-    #Zwraca listę kolumn numerycznych w DataFrame.
-    
     return df.select_dtypes(include='number').columns.tolist()
 
+
+# Zwraca listę kolumn kategorycznych (object/category) z ograniczeniem do 10 unikalnych 
 def get_categorical_columns(df: pd.DataFrame, threshold: int = 10) -> List[str]:
-    
-    #Zwraca listę kolumn kategorycznych (object/category z małą liczbą unikalnych wartości).
     categorical = []
     for col in df.select_dtypes(include=['object', 'category']).columns:
         if df[col].nunique() <= threshold:
             categorical.append(col)
     return categorical
 
+
+"""
+Waliduje podane kolumny i zwraca listę nazw.
+    - Jeśli columns=None, zwraca wszystkie odpowiednie (numeryczne lub wszystkie).
+    - Sprawdza istnienie kolumn i opcjonalnie ich numeryczność.
+"""
 def validate_columns(
     df: pd.DataFrame,
     columns: Optional[str],
     numeric_only: bool = True
 ) -> List[str]:
-    """
-    Waliduje podane kolumny i zwraca listę nazw.
-    - Jeśli columns=None, zwraca wszystkie odpowiednie (numeryczne lub wszystkie).
-    - Sprawdza istnienie kolumn i opcjonalnie ich numeryczność.
-    """
+
     if columns is None:
         if numeric_only:
             return get_numeric_columns(df)

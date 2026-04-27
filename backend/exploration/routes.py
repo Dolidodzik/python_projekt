@@ -8,13 +8,13 @@ from .core import basic_stats, column_types_report, correlation_matrix, perform_
 
 router = APIRouter()
 
+# Zwraca podstawowe statystyki dla wybranych lub wszystkich kolumn numerycznych
 @router.post("/basic-stats")
 async def basic_stats_endpoint(
     file: UploadFile = File(...),
     columns: Optional[str] = Form(None)
 ):
     
-    #Zwraca podstawowe statystyki dla wybranych lub wszystkich kolumn numerycznych.
     
     df = read_csv_safe(file)
     col_list = validate_columns(df, columns, numeric_only=True)
@@ -35,23 +35,22 @@ async def basic_stats_endpoint(
 
     return JSONResponse(content=stats)
 
+# Analizuje typy kolumn w pliku CSV
 @router.post("/column-types")
 async def column_types_endpoint(file: UploadFile = File(...)):
-    
-    #Analizuje typy kolumn w pliku CSV.
     
     df = read_csv_safe(file)
     report = column_types_report(df)
     return JSONResponse(content=report)
 
+
+#Oblicza macierz korelacji dla kolumn numerycznych
 @router.post("/correlation")
 async def correlation_endpoint(
     file: UploadFile = File(...),
     method: str = Form("pearson"),
     columns: Optional[str] = Form(None)
 ):
-    
-    #Oblicza macierz korelacji dla kolumn numerycznych.
     
     if method not in ["pearson", "spearman", "kendall"]:
         raise HTTPException(
@@ -78,6 +77,8 @@ async def correlation_endpoint(
 
     return JSONResponse(content=corr)
 
+
+# Wykonuje analizę głównych składowych
 @router.post("/pca")
 async def pca_endpoint(
     file: UploadFile = File(...),
@@ -86,7 +87,6 @@ async def pca_endpoint(
     standardize: bool = Form(True)
 ):
     
-    #Wykonuje analizę głównych składowych.
     
     df = read_csv_safe(file)
     col_list = validate_columns(df, columns, numeric_only=True)
@@ -112,6 +112,8 @@ async def pca_endpoint(
 
     return JSONResponse(content=pca_result)
 
+
+# Zwraca  raport z analizy eksploracyjnej 
 @router.post("/describe-all")
 async def describe_all_endpoint(file: UploadFile = File(...)):
     

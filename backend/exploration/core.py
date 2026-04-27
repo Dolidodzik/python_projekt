@@ -5,9 +5,8 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.impute import SimpleImputer
 
+# Oblicza podstawowe statystyki dla podanych kolumn numerycznych
 def basic_stats(df: pd.DataFrame, columns: List[str]) -> Dict[str, Dict[str, Any]]:
-    
-# Oblicza podstawowe statystyki dla podanych kolumn numerycznych.
     
     result = {}
     for col in columns:
@@ -17,23 +16,25 @@ def basic_stats(df: pd.DataFrame, columns: List[str]) -> Dict[str, Dict[str, Any
             continue
 
         stats = {
-            "count": int(series.count()),
-            "mean": float(series.mean()),
-            "median": float(series.median()),
-            "std": float(series.std()) if len(series) > 1 else None,
+            "count": int(series.count()), # liczba nie pustych wartosci w kolumnach
+            "mean": float(series.mean()), # srednia arytmetyczna
+            "median": float(series.median()), 
+            "std": float(series.std()) if len(series) > 1 else None, # odchylenie standardowe
             "min": float(series.min()),
             "max": float(series.max()),
-            "skewness": float(series.skew()),
-            "kurtosis": float(series.kurtosis()),
-            "q25": float(series.quantile(0.25)),
-            "q75": float(series.quantile(0.75)),
+            "skewness": float(series.skew()), # miara asymetrii rozkładu
+            "kurtosis": float(series.kurtosis()), # miara spłaszczenia rozkładu
+            "q25": float(series.quantile(0.25)), # pierwszy kwartyl (25% danych jest mniejszych lub równych tej wartości)
+            "q75": float(series.quantile(0.75)), # trzeci kwartyl (75% danych jest mniejszych lub równych tej wartości)
         }
         result[col] = stats
     return result
 
+
+
+#   Generuje raport o typach kolumn
 def column_types_report(df: pd.DataFrame) -> Dict[str, Any]:
 
-#   Generuje raport o typach kolumn.
     
     numeric = df.select_dtypes(include='number').columns.tolist()
     categorical = []
@@ -54,13 +55,13 @@ def column_types_report(df: pd.DataFrame) -> Dict[str, Any]:
         "categorical_count": len(categorical)
     }
 
-def correlation_matrix(
+# Oblicza macierz korelacji dla podanych kolumn
+def correlation_matrix( 
     df: pd.DataFrame,
     columns: List[str],
     method: str = 'pearson'
 ) -> Dict[str, Any]:
 
-    #Oblicza macierz korelacji dla podanych kolumn.
 
     if method not in ['pearson', 'spearman', 'kendall']:
         method = 'pearson'
@@ -75,15 +76,15 @@ def correlation_matrix(
         "method": method
     }
 
-def perform_pca(
+# Wykonuje PCA na wybranych kolumnach numerycznych
+def perform_pca( 
     df: pd.DataFrame,
     columns: List[str],
     n_components: Optional[int] = None,
     standardize: bool = True
 ) -> Dict[str, Any]:
-    """
-    Wykonuje PCA na wybranych kolumnach numerycznych.
-    """
+    
+    
     data = df[columns].copy()
 
     # Usuwamy wiersze z jakimikolwiek brakami
