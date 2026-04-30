@@ -23,3 +23,5 @@ uvloop==0.22.1
 watchfiles==1.1.1
 websockets==16.0
 scikit-learn==1.5.2 
+matplotlib
+seaborn
