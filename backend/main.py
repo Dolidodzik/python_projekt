@@ -15,13 +15,14 @@ from cleaning_and_preprocessing.drop import drop_column_data
 from cleaning_and_preprocessing.fillna import fillna_constant_data
 from cleaning_and_preprocessing.outliers import remove_outliers_data
 
-from statistic_tests.categorical_dependency import categorical_dependency
+from statistic_tests.chi_square import chi_square
 from statistic_tests.correlation import correlation
 from statistic_tests.t_test import t_test
 from statistic_tests.anova import anova
 from statistic_tests.normality import normality_test
 from statistic_tests.mann_whitney import mann_whitney_test
 from statistic_tests.covariance import covariance
+from typing import List
 
 app = FastAPI()
 
@@ -128,8 +129,8 @@ async def remove_outliers(
     output = df.to_csv(index=False)
     return Response(content=output, media_type="text/csv")
 
-@app.post("/statistic-tests/categorical_dependency")
-async def categorical_dependency_endpoint(
+@app.post("/statistic-tests/chi_square")
+async def chi_square_endpoint(
     file: UploadFile = File(...),
     col1: str = Form(...),
     col2: str = Form(...)
@@ -138,7 +139,7 @@ async def categorical_dependency_endpoint(
     df = read_dataframe(contents)
 
     try:
-        result = categorical_dependency(df, col1, col2)
+        result = chi_square(df, col1, col2)
         return JSONResponse(content=result)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -147,8 +148,9 @@ async def categorical_dependency_endpoint(
 async def correlation_endpoint(
     file: UploadFile = File(...),
     method: str = Form(...),
-    columns: str = Form(None)
+    columns: List[str] = Form(...)
 ):
+
     contents = await file.read()
     df = read_dataframe(contents)
 

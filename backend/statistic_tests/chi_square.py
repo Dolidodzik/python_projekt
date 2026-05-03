@@ -1,14 +1,9 @@
 import pandas as pd
 from scipy.stats import chi2_contingency
 
-
-def validate_columns(df: pd.DataFrame, col1: str, col2: str):
+def chi_square(df: pd.DataFrame, col1: str, col2: str):
     if col1 not in df.columns or col2 not in df.columns:
         raise ValueError("Column not found")
-
-
-def categorical_dependency(df: pd.DataFrame, col1: str, col2: str):
-    validate_columns(df, col1, col2)
 
     contingency_table = pd.crosstab(df[col1], df[col2])
 
@@ -17,5 +12,6 @@ def categorical_dependency(df: pd.DataFrame, col1: str, col2: str):
     return {
         "chi2": float(chi2),
         "p_value": float(p),
-        "dof": int(dof)
+        "dof": int(dof),
+        "expected": expected.tolist()
     }

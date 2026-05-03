@@ -1,6 +1,5 @@
 import pandas as pd
 
-
 def covariance(df: pd.DataFrame, columns: list):
     if not columns or len(columns) < 2:
         raise ValueError("At least 2 columns required")

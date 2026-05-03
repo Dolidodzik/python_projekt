@@ -1,7 +1,6 @@
 import pandas as pd
 from scipy.stats import mannwhitneyu
 
-
 def mann_whitney_test(df: pd.DataFrame, group_col: str, value_col: str):
     if group_col not in df.columns or value_col not in df.columns:
         raise ValueError("Column not found")
