@@ -1,4 +1,4 @@
-- opbiektowo zrobić 
-- wykres 
-- inteligentne usuwanie brakakującyh wartości - automatycznie 
-- rozkłada wartości w kolumnach 
+- opbiektowo zrobić - zrobione 
+- wykres - robi konrad 
+- inteligentne usuwanie brakakującyh wartości - automatycznie - daniel 
+- rozkłada wartości w kolumnach - zrobione 
