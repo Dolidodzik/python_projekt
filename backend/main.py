@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import Response
+from exploration.routes import ExplorationRouter
 from fastapi import HTTPException
 
 import pandas as pd
@@ -16,6 +17,11 @@ from cleaning_and_preprocessing.outliers import remove_outliers_data
 
 app = FastAPI()
 
+@app.get("/")
+def root():
+    return {"message": "EDA API is running"}
+exploration_router = ExplorationRouter()
+app.include_router(exploration_router.router, prefix="/exploration", tags=["Exploration"])
 
 @app.get("/")
 def root():
@@ -129,6 +135,5 @@ async def test_csv(
     # tescik z repo
     if "Embarked" in df.columns:
         df = df[df["Embarked"] == "Q"]
-
     output = df.to_csv(index=False)
     return Response(content=output, media_type="text/csv")
