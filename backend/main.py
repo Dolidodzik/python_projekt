@@ -5,6 +5,10 @@ from fastapi import HTTPException
 
 import pandas as pd
 import io
+import pandas as pd
+from fastapi import HTTPException, status
+from typing import Optional
+from regresje import train_linear_regression
 
 from cleaning_and_preprocessing.utils import read_dataframe, parse_columns
 from cleaning_and_preprocessing.impute import impute_data
@@ -129,8 +133,14 @@ async def remove_outliers(
 async def test_csv(
     file: UploadFile = File(...), method: str = Form(...), columns: str = Form(None)
 ):
-    contents = await file.read()
-    df = pd.read_csv(io.StringIO(contents.decode("utf-8")))
+    contents = await train_file.read()
+    try:
+        train_df = pd.read_csv(io.StringIO(contents.decode("utf-8")))
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="COULD_NOT_READ_CSV",
+        )
 
     # tescik z repo
     if "Embarked" in df.columns:
