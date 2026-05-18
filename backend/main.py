@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import Response
+from fastapi.responses import JSONResponse
 from exploration.routes import ExplorationRouter
 from fastapi import HTTPException
 
@@ -18,6 +19,15 @@ from cleaning_and_preprocessing.encode import encode_data
 from cleaning_and_preprocessing.drop import drop_column_data
 from cleaning_and_preprocessing.fillna import fillna_constant_data
 from cleaning_and_preprocessing.outliers import remove_outliers_data
+
+from statistic_tests.chi_square import chi_square
+from statistic_tests.correlation import correlation
+from statistic_tests.t_test import t_test
+from statistic_tests.anova import anova
+from statistic_tests.normality import normality_test
+from statistic_tests.mann_whitney import mann_whitney_test
+from statistic_tests.covariance import covariance
+from typing import List
 
 app = FastAPI()
 
@@ -128,6 +138,114 @@ async def remove_outliers(
     df = remove_outliers_data(df, method, cols, threshold)
     output = df.to_csv(index=False)
     return Response(content=output, media_type="text/csv")
+
+@app.post("/statistic-tests/chi_square")
+async def chi_square_endpoint(
+    file: UploadFile = File(...),
+    col1: str = Form(...),
+    col2: str = Form(...)
+):
+    contents = await file.read()
+    df = read_dataframe(contents)
+
+    try:
+        result = chi_square(df, col1, col2)
+        return JSONResponse(content=result)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/statistic-tests/correlation")
+async def correlation_endpoint(
+    file: UploadFile = File(...),
+    method: str = Form(...),
+    columns: List[str] = Form(...)
+):
+
+    contents = await file.read()
+    df = read_dataframe(contents)
+
+    try:
+        cols = parse_columns(columns, df)
+        result_df = correlation(df, method, cols)
+        output = result_df.to_csv(index=False)
+        return Response(content=output, media_type="text/csv")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/statistic-tests/t_test")
+async def t_test_endpoint(
+    file: UploadFile = File(...),
+    group_col: str = Form(...),
+    value_col: str = Form(...)
+):
+    contents = await file.read()
+    df = read_dataframe(contents)
+
+    try:
+        result = t_test(df, group_col, value_col)
+        return JSONResponse(content=result)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/statistic-tests/anova")
+async def anova_endpoint(
+    file: UploadFile = File(...),
+    group_col: str = Form(...),
+    value_col: str = Form(...)
+):
+    contents = await file.read()
+    df = read_dataframe(contents)
+
+    try:
+        result = anova(df, group_col, value_col)
+        return JSONResponse(content=result)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/statistic-tests/normality")
+async def normality_endpoint(
+    file: UploadFile = File(...),
+    column: str = Form(...)
+):
+    contents = await file.read()
+    df = read_dataframe(contents)
+
+    try:
+        result = normality_test(df, column)
+        return JSONResponse(content=result)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/statistic-tests/mann_whitney")
+async def mann_whitney_endpoint(
+    file: UploadFile = File(...),
+    group_col: str = Form(...),
+    value_col: str = Form(...)
+):
+    contents = await file.read()
+    df = read_dataframe(contents)
+
+    try:
+        result = mann_whitney_test(df, group_col, value_col)
+        return JSONResponse(content=result)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/statistic-tests/covariance")
+async def covariance_endpoint(
+    file: UploadFile = File(...),
+    columns: str = Form(...)
+):
+    contents = await file.read()
+    df = read_dataframe(contents)
+
+    try:
+        cols = parse_columns(columns, df)
+        result_df = covariance(df, cols)
+        output = result_df.to_csv(index=False)
+        return Response(content=output, media_type="text/csv")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/test/csv")
 async def test_csv(
