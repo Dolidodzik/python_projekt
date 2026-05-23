@@ -14,6 +14,10 @@ def t_test(df: pd.DataFrame, group_col: str, value_col: str):
     group1 = df[df[group_col] == groups[0]][value_col].dropna()
     group2 = df[df[group_col] == groups[1]][value_col].dropna()
 
+    #Sprawdzenie czy każda grupa ma co najmniej 2 obserwacje
+    if len(group1) < 2 or len(group2) < 2:
+        raise ValueError("Each group must have at least 2 observations")
+
     t_stat, p_value = ttest_ind(group1, group2)
 
     return {
