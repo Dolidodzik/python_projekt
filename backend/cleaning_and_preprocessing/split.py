@@ -17,12 +17,16 @@ def split_data(df, test_size, random_state=None, stratify=None):
     if stratify:
         if stratify not in df.columns:
             raise HTTPException(
-                status_code=400, detail="Stratify column not found"
+                status_code=400,
+                detail="Stratify column not found"
             )
 
-        if df[stratify].isna().any():
+        df = df.dropna(subset=[stratify])
+
+        if df.empty:
             raise HTTPException(
-                status_code=400, detail="Stratify column contains NaN values"
+                status_code=400,
+                detail="Dataset became empty after removing NaN values"
             )
 
         stratify_col = df[stratify]

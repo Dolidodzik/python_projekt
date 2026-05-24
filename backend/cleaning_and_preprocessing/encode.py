@@ -27,8 +27,8 @@ def encode_data(df, method, columns=None):
     else:
         for col in cols:
             le = LabelEncoder()
-            df.loc[:, col] = le.fit_transform(
-                df[col].astype(str).fillna("NaN")
+            df[col] = le.fit_transform(
+                df[col].fillna("NaN").astype(str)
             )
 
     return df
