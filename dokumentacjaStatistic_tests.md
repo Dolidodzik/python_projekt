@@ -22,7 +22,7 @@ backend/statistic_tests/
 
 Analiza wariancji (anova) służy do porównywania średnich pomiędzy więcej niż dwiema grupami. Pozwala jednym testem ustalić, czy przynajmniej jedna z porównywanych grup znacząco różni się od pozostałych pod kątem badanej cechy.
 
-![ANOVA](screenshots/anova.png)
+![ANOVA](backend/statistic_tests/screenshots/anova.png)
 
 Działanie testu na przykładzie `anova_Embarked_Fare`:
 
@@ -52,7 +52,7 @@ Wartość P jest niska co oznacza, że prawdopodobieństwo uzyskania tak dużych
 
 Test Chi-kwadrat sprawdza, czy pomiędzy dwiema zmiennymi kategorycznymi istnieje statystycznie istotna zależność, czy też są one od siebie niezależne. Najczęściej odpowiada na pytanie, czy zaobserwowane różnice w grupach są wynikiem przypadku, czy rzeczywistej relacji.
 
-![chi_square](screenshots/chi_square.png)
+![chi_square](backend/statistic_tests/screenshots/chi_square.png)
 
 Działanie testu na przykładzie `chi_square_Sex_Embarked`:
 
@@ -81,7 +81,7 @@ Wartości expected pokazują, ilu pasażerów powinno znaleźć się w każdej g
 
 Korelacja służy do określania siły oraz kierunku zależności pomiędzy dwiema zmiennymi liczbowymi.
 
-![correlation](screenshots/correlation.png)
+![correlation](backend/statistic_tests/screenshots/correlation.png)
 
 Działanie testu na przykładzie `correlation_Pclass_Fare`:
 
@@ -107,7 +107,7 @@ Pasażerowie podróżujący w 1 klasie płacili średnio więcej za bilety niż 
 
 Kowariancja pozwala sprawdzić, czy zmienne mają tendencję do wzrostu razem, czy też wzrost jednej zmiennej wiąże się ze spadkiem drugiej.
 
-![covariance](screenshots/covariance.png)
+![covariance](backend/statistic_tests/screenshots/covariance.png)
 
 Działanie testu na przykładzie `covariance_Pclass_Fare`:
 
@@ -134,7 +134,7 @@ Ujemna wartość oznacza, że wraz ze wzrostem jednej zmiennej druga zmienna ma 
 
 Test Manna-Whitneya służy do sprawdzenia, czy istnieją istotne statystycznie różnice między dwiema niezależnymi grupami.
 
-![mann_whitney](screenshots/mann_whitney.png)
+![mann_whitney](backend/statistic_tests/screenshots/mann_whitney.png)
 
 Działanie testu na przykładzie `mann_whitney_Sex_Fare`:
 
@@ -164,7 +164,7 @@ Wniosek: istnieje istotna statystycznie różnica pomiędzy cenami biletów pła
 
 Test normalności służy do sprawdzenia, czy analizowane dane mają rozkład normalny (są zgodne z krzywą Gaussa).
 
-![normality](screenshots/normality.png)
+![normality](backend/statistic_tests/screenshots/normality.png)
 
 Działanie testu na przykładzie `normality_Fare`:
 
