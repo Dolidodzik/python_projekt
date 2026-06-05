@@ -1,22 +1,14 @@
 import pandas as pd
-from typing import List
 
-def get_columns(df: pd.DataFrame, columns: List[str]):
-    if not columns:
-        raise ValueError("Columns parameter is required")
+def correlation(df: pd.DataFrame, col1: str, col2: str, method: str):
+    if col1 not in df.columns or col2 not in df.columns:
+        raise ValueError("Column not found")
 
-    cols = [c.strip() for c in columns if c.strip()]
-    for c in cols:
-        if c not in df.columns:
-            raise ValueError(f"Column {c} not found")
-
-    return cols
-
-
-def correlation(df: pd.DataFrame, method: str, columns: List[str]):
     if method not in ["pearson", "spearman", "kendall"]:
         raise ValueError("Invalid method")
 
-    cols = get_columns(df, columns)
+    corr_matrix = df[[col1, col2]].corr(method=method)
 
-    return df[cols].corr(method=method)
+    return {
+        "correlation": float(corr_matrix.loc[col1, col2]),
+    }

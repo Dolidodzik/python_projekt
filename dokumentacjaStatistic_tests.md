@@ -123,9 +123,7 @@ Działanie:
 - Obliczenia wykonywane są przy użyciu funkcji cov() z biblioteki Pandas.
 
 Otrzymana wartość (wynik został zwrócony w postaci macierzy korelacji):
-- "Pclass": 0.6990151199889029- pokazuje, jak bardzo wartości są rozproszone wokół średniej.
-- "Fare": 2469.436845743115- pokazuje, jak bardzo ceny biletów różnią się od średniej ceny biletu.
-- "Fare": -22.830196170065186- właściwa kowariancja między badanymi zmiennymi.
+- "covariance": -22.830196170065186- kowariancja między badanymi zmiennymi.
 
 Ujemna wartość oznacza, że wraz ze wzrostem jednej zmiennej druga zmienna ma tendencję do spadku. Wraz ze wzrostem numeru klasy pasażera średnia cena biletu maleje.
 
@@ -180,8 +178,8 @@ Działanie:
 - Obliczenia wykonywane są przy użyciu funkcji `shapiro()` z biblioteki `SciPy`.
 
 Otrzymane wartości:
-"statistic": 0.5218913010396559,
-"p_value": 1.0840444395829658e-43
+- "statistic": 0.5218913010396559,
+- "p_value": 1.0840444395829658e-43
 
 Wartość statistic jest znacznie mniejsza od 1 co oznacza wyraźne odstępstwo od rozkładu normalnego.
 Wartość p_value jest bardzo mała co oznacza, że prawdopodobieństwo uzyskania takiego wyniku przy założeniu normalności rozkładu jest bardzo małe.

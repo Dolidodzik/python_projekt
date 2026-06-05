@@ -138,17 +138,15 @@ class StatisticalTestEngine:
 
         if name == "correlation":
             _, col1, col2 = test
-            result = correlation(self.df, "pearson", [col1, col2])
             return {
                 "method": "pearson",
                 "columns": [col1, col2],
-                "result": result.to_dict(),
+                **correlation(self.df, col1, col2, "pearson"),
             }
 
         if name == "covariance":
             _, col1, col2 = test
-            result = covariance(self.df, [col1, col2])
-            return {"columns": [col1, col2], "result": result.to_dict()}
+            return {"columns": [col1, col2], **covariance(self.df, col1, col2)}
 
         if name == "chi_square":
             _, col1, col2 = test

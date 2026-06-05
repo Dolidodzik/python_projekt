@@ -2,7 +2,6 @@ import pandas as pd
 from scipy.stats import f_oneway
 import numpy as np
 
-
 def anova(df: pd.DataFrame, group_col: str, value_col: str):
     if group_col not in df.columns or value_col not in df.columns:
         raise ValueError("Column not found")
@@ -10,7 +9,7 @@ def anova(df: pd.DataFrame, group_col: str, value_col: str):
     groups = df[group_col].dropna().unique()
 
     if len(groups) < 2:
-        raise ValueError(f"ANOVA requires at least 2 groups, found {len(groups)}")
+        raise ValueError(f"anova requires at least 2 groups, found {len(groups)}")
 
     samples = [
         df[df[group_col] == g][value_col].dropna()
@@ -24,7 +23,7 @@ def anova(df: pd.DataFrame, group_col: str, value_col: str):
     f_stat, p_value = f_oneway(*samples)
 
     if np.isnan(f_stat) or np.isnan(p_value):
-        raise ValueError("Cannot compute ANOVA - insufficient data")
+        raise ValueError("Cannot compute anova - insufficient data")
 
     return {
         "f_value": float(f_stat),

@@ -8,7 +8,7 @@ def mann_whitney_test(df: pd.DataFrame, group_col: str, value_col: str):
     groups = df[group_col].dropna().unique()
 
     if len(groups) != 2:
-        raise ValueError("Mann-Whitney test requires exactly 2 groups")
+        raise ValueError("mann_whitney requires exactly 2 groups")
 
     group1 = df[df[group_col] == groups[0]][value_col].dropna()
     group2 = df[df[group_col] == groups[1]][value_col].dropna()
