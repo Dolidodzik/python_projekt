@@ -4,11 +4,9 @@ from fastapi import HTTPException, UploadFile, status
 from typing import List, Optional
 
 class FileHandler:
-    """Obsługa plików CSV – odczyt i walidacja kolumn."""
 
     @staticmethod
     def read_csv_safe(file: UploadFile) -> pd.DataFrame:
-        """Odczytuje plik CSV i zwraca DataFrame. W razie błędu rzuca HTTPException."""
         try:
             contents = file.file.read()
             df = pd.read_csv(io.StringIO(contents.decode('utf-8')))
@@ -32,10 +30,6 @@ class FileHandler:
         columns: Optional[str],
         numeric_only: bool = True
     ) -> List[str]:
-        """
-        Waliduje podane kolumny (lista rozdzielona przecinkami) i zwraca listę nazw.
-        Jeśli columns = None – zwraca wszystkie odpowiednie kolumny (numeryczne lub wszystkie).
-        """
         if columns is None:
             if numeric_only:
                 return df.select_dtypes(include='number').columns.tolist()

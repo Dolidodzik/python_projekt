@@ -5,7 +5,6 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
 class DataExplorer:
-    """Obiektowo zorganizowana eksploracyjna analiza danych."""
 
     def __init__(self, df: pd.DataFrame, cat_threshold: int = 10):
         self.df = df.copy()
@@ -13,7 +12,6 @@ class DataExplorer:
         self._detect_column_types()
 
     def _detect_column_types(self):
-        """Wykrywa typy kolumn: numeryczne, kategoryczne, tekstowe."""
         numeric = self.df.select_dtypes(include='number').columns.tolist()
         categorical = []
         text = []
@@ -27,7 +25,6 @@ class DataExplorer:
         self.text_columns = text
 
     def column_types_report(self) -> Dict[str, Any]:
-        """Zwiera raport o typach kolumn."""
         return {
             "numeric_columns": self.numeric_columns,
             "categorical_columns": self.categorical_columns,
@@ -38,11 +35,9 @@ class DataExplorer:
         }
 
     def basic_stats(self, columns: Optional[List[str]] = None) -> Dict[str, Dict[str, Any]]:
-        """Podstawowe statystyki dla podanych kolumn numerycznych."""
         if columns is None:
             columns = self.numeric_columns
         else:
-            # upewniamy się, że kolumny istnieją i są numeryczne
             columns = [c for c in columns if c in self.numeric_columns]
 
         result = {}
@@ -67,7 +62,6 @@ class DataExplorer:
         return result
 
     def correlation_matrix(self, columns: Optional[List[str]] = None, method: str = 'pearson') -> Dict[str, Any]:
-        """Macierz korelacji dla wybranych kolumn."""
         if columns is None:
             columns = self.numeric_columns
         else:
@@ -85,7 +79,6 @@ class DataExplorer:
         }
 
     def pca(self, columns: Optional[List[str]] = None, n_components: Optional[int] = None, standardize: bool = True) -> Dict[str, Any]:
-        """PCA na wybranych kolumnach numerycznych."""
         if columns is None:
             columns = self.numeric_columns
         else:
@@ -111,7 +104,6 @@ class DataExplorer:
         explained_variance_ratio = pca.explained_variance_ratio_.tolist()
         cumulative_variance = np.cumsum(explained_variance_ratio).tolist()
 
-        # Ładunki tylko dla pierwszych 5 komponentów
         loadings = {}
         for i in range(min(n_comp, 5)):
             component_name = f"PC{i+1}"
@@ -129,13 +121,11 @@ class DataExplorer:
         }
 
     def value_distribution(self, column: str) -> Dict[str, Any]:
-        """Rozkład wartości w kolumnie (numerycznej lub kategorycznej)."""
         if column not in self.df.columns:
             raise ValueError(f"Kolumna {column} nie istnieje.")
 
         series = self.df[column].dropna()
         if pd.api.types.is_numeric_dtype(series):
-            # Dla numerycznych – histogram z automatycznymi przedziałami (lub 10)
             hist, bin_edges = np.histogram(series, bins='auto')
             return {
                 "column": column,
@@ -150,9 +140,7 @@ class DataExplorer:
                 }
             }
         else:
-            # Dla kategorycznych – liczebności
             value_counts = series.value_counts().to_dict()
-            # konwersja kluczy na string (np. dla JSON)
             value_counts = {str(k): v for k, v in value_counts.items()}
             return {
                 "column": column,
@@ -162,7 +150,6 @@ class DataExplorer:
             }
 
     def describe_all(self) -> Dict[str, Any]:
-        """Kompleksowy raport: typy, statystyki, korelacje."""
         stats = self.basic_stats(self.numeric_columns) if self.numeric_columns else {}
         corr = self.correlation_matrix() if len(self.numeric_columns) >= 2 else None
         return {
