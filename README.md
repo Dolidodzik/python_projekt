@@ -1,8 +1,64 @@
-# python_projekt
-projekt na zaliczenie programowanie w języku python 
+# Dokumentacja 
 
-# odpalanie backendu:
-0. przejscie do katalogu backend
-1. uruchomienie swojego srodowiska wirutalnego
-2. zainstalowanie zależności: pip install -r requirements.txt
-3. odpalenie projektu: uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+## Uruchomienie
+
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+python3 -m exploration.generate_diagrams  # demonstracja modułu exploration
+```
+
+Przykładowy plik danych: `Titanic-Dataset.csv`
+
+## Moduły projektu
+
+| Moduł | Prefix API | Opis |
+|-------|------------|------|
+| **exploration** | `/exploration` | EDA typy kolumn, statystyki, korelacje, PCA, rozkłady ( moja czesc ) |
+| cleaning_and_preprocessing | `/cleaning_and_preprocessing` | Imputacja, normalizacja, kodowanie, outliery |
+| statistic_tests | `/statistic-tests` | Testy statystyczne |
+| regresje | `/test` | Modele regresyjne |
+
+## Moduł exploration (EDA)
+
+Wstępna analiza przesłanego pliku CSV, wynik w JSON.  
+Klasy: `DataExplorer`, `FileHandler`, `ExplorationRouter`, `DiagramGenerator`.
+
+| Endpoint | Opis |
+|----------|------|
+| `POST /exploration/column-types` | Typy kolumn |
+| `POST /exploration/basic-stats` | Statystyki opisowe |
+| `POST /exploration/correlation` | Macierz korelacji |
+| `POST /exploration/pca` | PCA |
+| `POST /exploration/distribution` | Rozkład jednej kolumny |
+| `POST /exploration/describe-all` | Raport zbiorczy |
+
+
+
+### Zrzuty ekranu / diagramy
+
+Poniżej przykładowe wyniki na zbiorze Titanic wygenerowane skryptem `generate_diagrams`
+
+**Macierz korelacji**
+
+![Korelacja](backend/exploration/output/diagramy/titanic_korelacja.png)
+
+**Rozkład wieku pasażerów**
+
+![Rozkład Age](backend/exploration/output/diagramy/titanic_rozkład_Age.png)
+
+**Rozkład kolumny kategorycznej (Sex)**
+
+![Rozkład Sex](backend/exploration/output/diagramy/titanic_rozkład_Sex.png)
+
+**PCA – wyjaśniona wariancja**
+
+![PCA](backend/exploration/output/diagramy/titanic_pca.png)
+
+**Podstawowe statystyki**
+
+![Statystyki](backend/exploration/output/diagramy/titanic_statystyki.png)
