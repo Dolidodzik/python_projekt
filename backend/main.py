@@ -5,7 +5,7 @@ from fastapi import HTTPException
 import pandas as pd
 import io
 
-from cleaning_and_preprocessing.utils import read_dataframe, parse_columns
+from cleaning_and_preprocessing.utils import DataFrameUtils
 from cleaning_and_preprocessing.impute import impute_data
 from cleaning_and_preprocessing.normalize import normalize_data
 from cleaning_and_preprocessing.split import split_data
@@ -21,6 +21,7 @@ app = FastAPI()
 def root():
     return {"message": "Data preprocessing API running"}
 
+
 @app.post("/cleaning_and_preprocessing/impute")
 async def impute(
     file: UploadFile = File(...),
@@ -28,8 +29,8 @@ async def impute(
     columns: str = Form(None)
 ):
     contents = await file.read()
-    df = read_dataframe(contents)
-    cols = parse_columns(columns, df)
+    df = DataFrameUtils.read_dataframe(contents)
+    cols = DataFrameUtils.parse_columns(columns, df)
     df = impute_data(df, method, cols)
     output = df.to_csv(index=False)
     return Response(content=output, media_type="text/csv")
@@ -42,8 +43,8 @@ async def normalize(
     columns: str = Form(None)
 ):
     contents = await file.read()
-    df = read_dataframe(contents)
-    cols = parse_columns(columns, df)
+    df = DataFrameUtils.read_dataframe(contents)
+    cols = DataFrameUtils.parse_columns(columns, df)
     df = normalize_data(df, method, cols)
     output = df.to_csv(index=False)
     return Response(content=output, media_type="text/csv")
@@ -57,7 +58,7 @@ async def split(
     stratify: str = Form(None)
 ):
     contents = await file.read()
-    df = read_dataframe(contents)
+    df = DataFrameUtils.read_dataframe(contents)
     train, test = split_data(df, test_size, random_state, stratify)
     return {
         "train": train.to_csv(index=False),
@@ -72,8 +73,8 @@ async def encode_categorical(
     columns: str = Form(None)
 ):
     contents = await file.read()
-    df = read_dataframe(contents)
-    cols = parse_columns(columns, df)
+    df = DataFrameUtils.read_dataframe(contents)
+    cols = DataFrameUtils.parse_columns(columns, df)
     df = encode_data(df, method, cols)
     output = df.to_csv(index=False)
     return Response(content=output, media_type="text/csv")
@@ -85,7 +86,7 @@ async def drop_column(
     column: str = Form(...)
 ):
     contents = await file.read()
-    df = read_dataframe(contents)
+    df = DataFrameUtils.read_dataframe(contents)
     df = drop_column_data(df, column)
     output = df.to_csv(index=False)
     return Response(content=output, media_type="text/csv")
@@ -98,8 +99,8 @@ async def fillna_constant(
     columns: str = Form(None)
 ):
     contents = await file.read()
-    df = read_dataframe(contents)
-    cols = parse_columns(columns, df)
+    df = DataFrameUtils.read_dataframe(contents)
+    cols = DataFrameUtils.parse_columns(columns, df)
     df = fillna_constant_data(df, value, cols)
     output = df.to_csv(index=False)
     return Response(content=output, media_type="text/csv")
@@ -113,11 +114,12 @@ async def remove_outliers(
     threshold: float = Form(None)
 ):
     contents = await file.read()
-    df = read_dataframe(contents)
-    cols = parse_columns(columns, df)
+    df = DataFrameUtils.read_dataframe(contents)
+    cols = DataFrameUtils.parse_columns(columns, df)
     df = remove_outliers_data(df, method, cols, threshold)
     output = df.to_csv(index=False)
     return Response(content=output, media_type="text/csv")
+
 
 @app.post("/test/csv")
 async def test_csv(

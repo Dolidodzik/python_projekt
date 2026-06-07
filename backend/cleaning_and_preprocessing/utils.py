@@ -1,56 +1,76 @@
-import pandas as pd
 import io
-import csv
+import pandas as pd
 from fastapi import HTTPException
 
 
-def read_dataframe(file_bytes: bytes) -> pd.DataFrame:
-    try:
-        content = file_bytes.decode("utf-8")
+class DataFrameUtils:
+
+    @staticmethod
+    def read_dataframe(contents):
 
         try:
-            dialect = csv.Sniffer().sniff(content[:1000])
-            sep = dialect.delimiter
-        except Exception:
-            sep = ","
+            df = pd.read_csv(
+                io.StringIO(contents.decode("utf-8")),
+                sep=None,
+                engine="python",
+                na_values=[
+                    "N/A", "NA", "NULL", "null",
+                    "", "NaN", "nan", "None"
+                ],
+                keep_default_na=True,
+                skip_blank_lines=True,
+                skipinitialspace=True,
+                parse_dates = True
+            )
 
-        df = pd.read_csv(io.StringIO(content), sep=sep)
+            df = df.dropna(how="all")
 
-        return df
+            for col in df.select_dtypes(include="object").columns:
+                df[col] = df[col].astype(str).str.strip()
+                df.loc[df[col].isin(["", "nan", "None"]), col] = pd.NA
 
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid file format")
+            df = df.convert_dtypes()
 
+            return df
 
-def parse_columns(columns: str, df: pd.DataFrame):
-    if columns is None:
-        return None
+        except Exception as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid file format: {str(e)}"
+            )
 
-    cols = [c.strip() for c in columns.split(",") if c.strip()]
+    @staticmethod
+    def parse_columns(columns, df):
 
-    if not cols:
-        raise HTTPException(status_code=400, detail="Empty columns list")
+        if columns is None:
+            return None
 
-    for col in cols:
-        if col not in df.columns:
-            raise HTTPException(status_code=400, detail=f"Column {col} not found")
+        cols = [c.strip() for c in columns.split(",")]
 
-    return cols
+        for col in cols:
+            if col not in df.columns:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Column '{col}' not found"
+                )
 
+        return cols
 
-def get_numeric_columns(df: pd.DataFrame, columns=None):
-    if columns:
-        numeric_cols = [
-            c for c in columns
-            if pd.api.types.is_numeric_dtype(df[c])
-        ]
-    else:
-        numeric_cols = df.select_dtypes(include="number").columns.tolist()
+    @staticmethod
+    def get_numeric_columns(df, columns=None):
 
-    if not numeric_cols:
-        raise HTTPException(
-            status_code=400,
-            detail="No numeric columns found"
-        )
+        if columns:
+            numeric_cols = [
+                c for c in columns
+                if c in df.columns and pd.api.types.is_numeric_dtype(df[c])
+            ]
+        else:
+            numeric_cols = df.select_dtypes(include="number").columns.tolist()
 
-    return numeric_cols
+        if not numeric_cols:
+            raise HTTPException(
+                status_code=400,
+                detail="No numeric columns found"
+            )
+
+        return numeric_cols

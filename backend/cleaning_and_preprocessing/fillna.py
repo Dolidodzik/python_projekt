@@ -1,13 +1,26 @@
+from fastapi import HTTPException
+
+
+class ConstantFiller:
+
+    def fill(self, df, value, columns=None):
+        if columns:
+
+            for col in columns:
+
+                if col not in df.columns:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Column '{col}' not found"
+                    )
+
+                df[col] = df[col].fillna(value)
+
+        else:
+            df = df.fillna(value)
+
+        return df
+
+
 def fillna_constant_data(df, value, columns=None):
-    df = df.copy()
-
-    if columns:
-        if len(columns) == 0:
-            return df
-
-        for col in columns:
-            df.loc[:, col] = df[col].fillna(value)
-    else:
-        df = df.fillna(value)
-
-    return df.reset_index(drop=True)
+    return ConstantFiller().fill(df, value, columns)
