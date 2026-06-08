@@ -265,3 +265,49 @@ async def test_csv(
         df = df[df["Embarked"] == "Q"]
     output = df.to_csv(index=False)
     return Response(content=output, media_type="text/csv")
+
+#--------------------------------
+# Test exploracji 
+
+def run_exploration_test():
+    from pathlib import Path
+    from fastapi.testclient import TestClient
+
+    csv_path = Path(__file__).resolve().parent.parent / "Titanic-Dataset.csv"
+    if not csv_path.exists():
+        print(f"Brak pliku testowego: {csv_path}")
+        return
+
+    client = TestClient(app)
+    csv_bytes = csv_path.read_bytes()
+    files = {"file": (csv_path.name, csv_bytes, "text/csv")}
+
+    print("=== Test modułu exploration (API) ===\n")
+
+    types_resp = client.post("/exploration/column-types", files=files)
+    if types_resp.status_code != 200:
+        print(f"Błąd column-types: {types_resp.status_code} {types_resp.text}")
+        return
+
+    types = types_resp.json()
+    print(f"Kolumny: {types['total_columns']} (num: {types['numeric_count']}, kat: {types['categorical_count']})")
+    print(f"  numeryczne: {', '.join(types['numeric_columns'])}")
+    print(f"  kategoryczne: {', '.join(types['categorical_columns'])}")
+
+    stats_resp = client.post(
+        "/exploration/basic-stats",
+        files=files,
+        data={"columns": "Age,Fare"},
+    )
+    if stats_resp.status_code != 200:
+        print(f"Błąd basic-stats: {stats_resp.status_code} {stats_resp.text}")
+        return
+
+    stats = stats_resp.json()
+    print("\nStatystyki (Age, Fare):")
+    for col, values in stats.items():
+        print(f"  {col}: średnia={values['mean']:.2f}, mediana={values['median']:.2f}, min={values['min']}, max={values['max']}")
+
+
+if __name__ == "__main__":
+    run_exploration_test()
